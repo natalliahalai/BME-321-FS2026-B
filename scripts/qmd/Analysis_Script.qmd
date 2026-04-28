@@ -92,17 +92,7 @@ As the first step in the data exploration correlation values were calculated for
 ## Graphically
 
 ```{r}
-#| label: fig-exp-graph-01
-#| fig-width: !expr 20/2.54
-#| fig-height: !expr 20/2.54
-#| fig-cap: "Paired plot of all variables"
-
-ggpairs(lung_function, aes(col=treatment_group))
-
-```
-
-```{r}
-#| label: fig-exp-graph-02
+#| label: fig-exp-graph
 #| fig-width: !expr 20/2.54
 #| fig-height: !expr 20/2.54
 #| fig-cap: ""
@@ -125,3 +115,5 @@ ggarrange(
 )
 
 ```
+
+In @fig-exp-graph we can see different predictor variables plotted against FEV improvement response variable.
