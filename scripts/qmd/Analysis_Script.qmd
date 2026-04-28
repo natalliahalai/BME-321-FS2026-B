@@ -127,6 +127,18 @@ ggarrange(
 
 In @fig-exp-graph we can see different predictor variables plotted against FEV improvement response variable.
 
+# T-test for Treatment Effects
+
+```{r}
+#| label: t-test
+#| output: false
+
+(t_values<-t.test(fev1_improvement~treatment_group, lung_function))
+
+```
+
+The two sample t-test shows that there seems to be a statistically significant difference between the two treatment groups. (p =`r t_values$p.value`, 95% CI = (`r t_values$conf.int`) )
+
 # Model Fitting
 
 ## Create Candidate Models
@@ -148,7 +160,7 @@ knitr::kable(compare_performance(model.00, model.01, model.02, model.03, model.0
 
 We will be choosing the model.04 which has all the predictor variables included as it explains the most variance in the data.
 
-## Check chosen models diagnostics
+## Check chosen model diagnostics
 
 ```{r}
 #| label: fig-diagnostic-model
@@ -225,11 +237,14 @@ ggarrange(
 
 ```{r}
 #| label: tbl-lm
+#| echo: false
 #| tbl-cap: !expr paste("Estimates, associated standard errors and statistical significance of the parameters estimated by a Linear Model","($R^2$=", r.2, ", $F-test_{(",  null_test[2,3],",", null_test[2,1], ")}$=", round(null_test[2,5],3), ", $p$ =", format.pval(null_test[2, 6], eps= 0.001), ")")
 
 knitr::kable(coef_table)
 
 ```
+
+# Conclusion
 
 A Linear Model (*R*^2^= `r r.2`, `r paste("$F-test_{(", null_test[2,3], ",", null_test[2,1], ")}$")`= `r round(null_test[2, 5], 3)`, *p*= `r format.pval(null_test[2, 6], eps= 0.001)`; @tbl-lm) performed significantly better than a null model, compromising an intercept only.
 
@@ -237,18 +252,19 @@ A Linear Model (*R*^2^= `r r.2`, `r paste("$F-test_{(", null_test[2,3], ",", nul
 
 1.  ICS-X leads to greater improvement in FEV₁
 
-    -   In the @tbl-lm we can see that patients treated by ICS-X had a significant improvement in the post-treatment FEV.
+    -   A two sided t-test confirmed that there is indeed a difference in effect between the two treatment groups. (p =`r t_values$p.value`, 95% CI = (`r t_values$conf.int`) )
+    -   And in the @tbl-lm we can see that the ICS-X treatment had a significant positive effect on the post-treatment FEV. (B1: `r coef_table[3,1]`, p = `r coef_table[3,4]`)
 
 2.  Higher baseline FEV₁ is associated with less room for improvement
 
-    -   As seen in the @fig-pred and also in the @tbl-lm Baseline FEV seems to be negatively correlated with the FEV improvement. This effects is also statistically significant.
+    -   As seen in the @fig-pred and also in the @tbl-lm Baseline FEV seems to be negatively correlated with the FEV improvement. This effects is also statistically significant. (B1: `r coef_table[2,1]`, p < 0.001)
 
 3.  Smokers exhibit a reduced treatment response
 
-    -   In our exploration @fig-exp-graph we could already see that this hypothesis must already be rejected and after completing a full analysis we can conclude that smokers profit from the treatment more than non-smokers and former smokers as shown by their positive slope in @tbl-lm while keeping other variables constant.
+    -   In our exploration @fig-exp-graph we could already see that this hypothesis must already be rejected and after completing a full analysis we can conclude that smokers profit from the treatment more than non-smokers and former smokers as shown by their positive slope in @tbl-lm while keeping other variables constant. 
 
 4.  A negative Age effect on improvement
 
-    -   Age as shown in @tbl-lm does have a negative effect on FEV improvement which is also shown to be statistically significant.
+    -   Age as shown in @tbl-lm and in previous figures (@fig-pred, @fig-exp-graph) does have a negative effect on FEV improvement which is also shown to be statistically significant. (B1: `r coef_table[4,1]`, p < 0.001)
 
 Accounting all of these points we have enough evidence to accept all our prior hypotheses excluding the 3rd one as we have seen that smokers have a higher FEV improvement which can be explained with the same reasoning as we did with Baseline FEV, meaning that non-smokers have already a higher Baseline thus the treatment effect is only small compared to smokers.
