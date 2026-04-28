@@ -117,3 +117,41 @@ ggarrange(
 ```
 
 In @fig-exp-graph we can see different predictor variables plotted against FEV improvement response variable.
+
+# Model Fitting
+
+## Create Candidate Models
+
+```{r}
+#| label: tbl-cand-models
+#| tbl-cap: "Model performance comparison"
+#| echo: false
+
+model.00<-lm(fev1_improvement~1, lung_function)
+model.01<-lm(fev1_improvement~baseline_fev1, lung_function)
+model.02<-lm(fev1_improvement~baseline_fev1+treatment_group, lung_function)
+model.03<-lm(fev1_improvement~baseline_fev1+treatment_group+age, lung_function)
+model.04<-lm(fev1_improvement~baseline_fev1+treatment_group+age+smoking_status, lung_function)
+
+knitr::kable(compare_performance(model.00, model.01, model.02, model.03, model.04), digits=3)
+
+```
+
+We will be choosing the model.04 which has all the predictor variables included as it explains the most variance in the data.
+
+## Check chosen models diagnostics
+
+```{r}
+#| label: fig-diagnostic-model
+#| fig-cap: "Diagnostic plots"
+#| fig-width: !expr 25/2.54
+#| fig-height: !expr 25/2.54
+
+check_model(model.04)
+```
+
+In @fig-diagnostic-model we can see that there is no high collinearity between the variables, the homoscedasticity assumption is also met as well as the Normality (normal residuals distribution) and Linearity(trends in the residuals). Also we can detect no outliers/influencial points in the Cook's plot.
+
+```{r}
+
+```
