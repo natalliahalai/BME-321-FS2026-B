@@ -60,7 +60,8 @@ lung_function <- read_csv("data/processed/lung-function.csv")
 
 str(lung_function)
 # lung_function$id<-factor(lung_function$id)
-lung_function$treatment_group<-factor(lung_function$treatment_group)
+lung_function$treatment_group<-factor(lung_function$treatment_group, 
+                                      levels=c("standard_inhaler", "ICSX"))
 lung_function$smoking_status<-factor(lung_function$smoking_status,
                                      levels=c("never", "former", "current"))
 
@@ -101,17 +102,24 @@ As the first step in the data exploration correlation values were calculated for
 ggarrange(
   ggplot(lung_function, aes(x=treatment_group, y=fev1_improvement, color=treatment_group))+
     geom_point()+
-    geom_boxplot(outlier.shape = NA),
+    geom_boxplot(outlier.shape = NA)+
+    labs(x="Treatment", y="FEV improvement"),
+  
   ggplot(lung_function, aes(x=baseline_fev1,y=fev1_improvement, color=treatment_group))+
     geom_point()+
-    geom_smooth(method="lm"),
+    geom_smooth(method="lm")+
+    labs(x="Baseline FEV", y="FEV improvement"),
+
   ggplot(lung_function, aes(x=smoking_status, y=fev1_improvement))+
     geom_point()+
-    geom_boxplot(outlier.shape=NA)
-  ,
+    geom_boxplot(outlier.shape=NA)+
+    labs(x="Smoking Status", y="FEV improvement"),
+
   ggplot(lung_function, aes(x=age, y=fev1_improvement, color=treatment_group))+
     geom_point()+
-    geom_smooth(method="lm"), 
+    geom_smooth(method="lm")+
+    labs(x="Age", y="FEV improvement"),
+
   common.legend = TRUE, labels=c("a)", "b)", "c)", "d)")
 )
 
@@ -153,7 +161,6 @@ check_model(model.04)
 
 In @fig-diagnostic-model we can see that there is no high collinearity between the variables, the homoscedasticity assumption is also met as well as the Normality (normal residuals distribution) and Linearity(trends in the residuals). Also we can detect no outliers/influencial points in the Cook's plot.
 
-
 ## Interpretting the chosen model
 
 ```{r}
@@ -162,22 +169,30 @@ In @fig-diagnostic-model we can see that there is no high collinearity between t
 
 coef_table<-round(summary(model.04)$coefficients, digits=3)
 
-r.2<-round(attributes(r.squaredLR(model.04))$adj.r.squared, digits=3)
-
+r.2 <- summary(model.04)$adj.r.squared
 null_test<-anova(model.00, model.04)
 
 ```
 
-
 ```{r}
 #| label: fig-pred
+#| echo: false
+#| fig-cap: "Prediction plots: a) Predicting FEV Improvement based on age and smoking status; b) Predicting FEV Improvement based on Baseline FEV and treatment group,; c) Predicting FEV Improvement based on Baseline FEV and smoking status"
+#| fig-width: !expr 30/2.54
+#| fig-height: !expr 20/2.54
 
 pred.age<-predict_response(model.04, terms=c("age", "smoking_status"))
 pred.baseline<-predict_response(model.04, terms=c("baseline_fev1", "treatment_group"))
 
-pred_all<-predict_response(model.04, terms=c("age", "baseline_fev1", "treatment_group", "smoking_status"))
+pred.smoking<-predict_response(model.04, terms=c("baseline_fev1", "smoking_status"))
 
 pred.age<-pred.age%>%
+  rename(Smoking_status="group")
+
+pred.baseline<-pred.baseline%>%
+  rename(Treatment="group")
+
+pred.smoking<-pred.smoking%>%
   rename(Smoking_status="group")
 
 ggarrange(
@@ -188,14 +203,52 @@ ggarrange(
     ylab("Predicted FEV Improvement")+
     xlab("Age"),
   
-  ggplot(pred.baseline, aes(x, predicted, color=group))+
+  ggplot(pred.baseline, aes(x, predicted, color=Treatment))+
     geom_line()+
     geom_point(data=lung_function, aes(x=baseline_fev1, y=fev1_improvement, color=treatment_group))+
-    geom_ribbon(aes(ymin=pred.baseline$conf.low, ymax=pred.baseline$conf.high, fill=group), alpha=.4)+
+    geom_ribbon(aes(ymin=pred.baseline$conf.low, ymax=pred.baseline$conf.high, fill=Treatment), alpha=.4)+
     ylab("Predicted FEV Improvement")+
-    xlab("Baseline FEV")
+    xlab("Baseline FEV"),
+  
+  ggplot(pred.smoking, aes(x, predicted, color=Smoking_status))+
+    geom_line()+
+    geom_point(data=lung_function, aes(x=baseline_fev1, y=fev1_improvement, color=smoking_status))+
+    geom_ribbon(aes(ymin=conf.low, ymax=conf.high, fill=Smoking_status), alpha=.4)+
+    ylab("Predicted FEV Improvement")+
+    xlab("Baseline FEV"),
+  
+  labels=c("a)", "b)", "c)")
 
 )
 
 ```
 
+```{r}
+#| label: tbl-lm
+#| tbl-cap: !expr paste("Estimates, associated standard errors and statistical significance of the parameters estimated by a Linear Model","($R^2$=", r.2, ", $F-test_{(",  null_test[2,3],",", null_test[2,1], ")}$=", round(null_test[2,5],3), ", $p$ =", format.pval(null_test[2, 6], eps= 0.001), ")")
+
+knitr::kable(coef_table)
+
+```
+
+A Linear Model (*R*^2^= `r r.2`, `r paste("$F-test_{(", null_test[2,3], ",", null_test[2,1], ")}$")`= `r round(null_test[2, 5], 3)`, *p*= `r format.pval(null_test[2, 6], eps= 0.001)`; @tbl-lm) performed significantly better than a null model, compromising an intercept only.
+
+**We generated compelling support for the following Hypothesis**:
+
+1.  ICS-X leads to greater improvement in FEV₁
+
+    -   In the @tbl-lm we can see that patients treated by ICS-X had a significant improvement in the post-treatment FEV.
+
+2.  Higher baseline FEV₁ is associated with less room for improvement
+
+    -   As seen in the @fig-pred and also in the @tbl-lm Baseline FEV seems to be negatively correlated with the FEV improvement. This effects is also statistically significant.
+
+3.  Smokers exhibit a reduced treatment response
+
+    -   In our exploration @fig-exp-graph we could already see that this hypothesis must already be rejected and after completing a full analysis we can conclude that smokers profit from the treatment more than non-smokers and former smokers as shown by their positive slope in @tbl-lm while keeping other variables constant.
+
+4.  A negative Age effect on improvement
+
+    -   Age as shown in @tbl-lm does have a negative effect on FEV improvement which is also shown to be statistically significant.
+
+Accounting all of these points we have enough evidence to accept all our prior hypotheses excluding the 3rd one as we have seen that smokers have a higher FEV improvement which can be explained with the same reasoning as we did with Baseline FEV, meaning that non-smokers have already a higher Baseline thus the treatment effect is only small compared to smokers.
