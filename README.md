@@ -1,8 +1,11 @@
 ## Effect of a New Inhaled Therapy on Lung Function in Mild Asthma
 
-A randomized controlled trial evaluates a new inhaled corticosteroid (ICS-X) compared to a standard inhaler in patients with mild persistent asthma.
+A randomized controlled trial evaluates a new inhaled corticosteroid (ICS-X) 
+compared to a standard inhaler in patients with mild persistent asthma.
 
-Patients are randomized to receive either ICS-X or standard therapy for 6 weeks. Lung function is assessed at baseline and at follow-up using FEV₁ (forced expiratory volume in 1 second).
+Patients are randomized to receive either ICS-X or standard therapy for 6 weeks. 
+Lung function is assessed at baseline and at follow-up using FEV₁ (forced expiratory 
+volume in 1 second).
 
 ***The primary endpoint is improvement in FEV₁.***
 

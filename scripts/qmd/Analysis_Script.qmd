@@ -1,0 +1,55 @@
+---
+title: "Effect of a New Inhaled Therapy on Lung Function in Mild Asthma"
+author: "Natallia Halai"
+toc:  true
+date: today
+abstract-title: " Abstract: "
+abstract: "A randomized controlled trial evaluates a new inhaled corticosteroid (ICS-X) compared to a standard inhaler in patients with mild persistent asthma.
+Patients are randomized to receive either ICS-X or standard therapy for 6 weeks. Lung function is assessed at baseline and at follow-up using FEV₁ (forced expiratory volume in 1 second).
+The primary endpoint is improvement in FEV₁."
+  
+project:
+  output-dir: output
+  execute-dir: project
+
+format: 
+  html:
+    embed-resources: true
+    code-fold: true
+    number-sections: true
+editor: visual
+editor-options:
+  chunk-output-type: console
+  
+execute: 
+  warning: false
+  error: false
+  freeze: true
+---
+
+# 0. Hypothesis
+
+-   ICS-X leads to greater improvement in FEV₁
+
+-   Higher baseline FEV₁ is associated with less room for improvement
+
+-   Smokers exhibit a reduced treatment response
+
+-   A negative Age effect on improvement
+
+```{r}
+#| label: data_preparation
+#| echo: false
+#| output: false
+
+lung_function <- read_csv("data/processed/lung-function.csv")
+
+str(lung_function)
+lung_function$id<-factor(lung_function$id)
+lung_function$treatment_group<-factor(lung_function$treatment_group)
+lung_function$smoking_status<-factor(lung_function$smoking_status)
+
+summary(lung_function)
+```
+
+
