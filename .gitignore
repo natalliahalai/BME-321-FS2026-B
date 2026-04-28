@@ -8,6 +8,7 @@
 _admin/
 output/
 *.Rproj
+*freeze/
 
 # Quarto defaults
 /.quarto/
