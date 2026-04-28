@@ -61,7 +61,8 @@ lung_function <- read_csv("data/processed/lung-function.csv")
 str(lung_function)
 # lung_function$id<-factor(lung_function$id)
 lung_function$treatment_group<-factor(lung_function$treatment_group)
-lung_function$smoking_status<-factor(lung_function$smoking_status)
+lung_function$smoking_status<-factor(lung_function$smoking_status,
+                                     levels=c("never", "former", "current"))
 
 summary(lung_function)
 ```
@@ -152,6 +153,49 @@ check_model(model.04)
 
 In @fig-diagnostic-model we can see that there is no high collinearity between the variables, the homoscedasticity assumption is also met as well as the Normality (normal residuals distribution) and Linearity(trends in the residuals). Also we can detect no outliers/influencial points in the Cook's plot.
 
+
+## Interpretting the chosen model
+
 ```{r}
+#| label: taking-table
+#| echo: false
+
+coef_table<-round(summary(model.04)$coefficients, digits=3)
+
+r.2<-round(attributes(r.squaredLR(model.04))$adj.r.squared, digits=3)
+
+null_test<-anova(model.00, model.04)
 
 ```
+
+
+```{r}
+#| label: fig-pred
+
+pred.age<-predict_response(model.04, terms=c("age", "smoking_status"))
+pred.baseline<-predict_response(model.04, terms=c("baseline_fev1", "treatment_group"))
+
+pred_all<-predict_response(model.04, terms=c("age", "baseline_fev1", "treatment_group", "smoking_status"))
+
+pred.age<-pred.age%>%
+  rename(Smoking_status="group")
+
+ggarrange(
+  ggplot(pred.age, aes(x, predicted, color=Smoking_status))+
+    geom_line()+
+    geom_point(data=lung_function, aes(x=age, y=fev1_improvement, color=smoking_status))+
+    geom_ribbon(aes(ymin=pred.age$conf.low, ymax=pred.age$conf.high, fill=Smoking_status), alpha=.4)+
+    ylab("Predicted FEV Improvement")+
+    xlab("Age"),
+  
+  ggplot(pred.baseline, aes(x, predicted, color=group))+
+    geom_line()+
+    geom_point(data=lung_function, aes(x=baseline_fev1, y=fev1_improvement, color=treatment_group))+
+    geom_ribbon(aes(ymin=pred.baseline$conf.low, ymax=pred.baseline$conf.high, fill=group), alpha=.4)+
+    ylab("Predicted FEV Improvement")+
+    xlab("Baseline FEV")
+
+)
+
+```
+
